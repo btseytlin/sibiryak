@@ -1,15 +1,17 @@
 use amethyst::{
-    core::{Transform, SystemDesc, timing::Time, math::Vector3},
+    core::{Named, Transform, SystemDesc, timing::Time, math::Vector3},
     derive::SystemDesc,
     ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, World, WriteStorage},
     input::{InputHandler, StringBindings},
     window::ScreenDimensions,
+    renderer::{Camera}
 };
 use std::f32::consts::PI;
 
 pub struct MovementSystem;
 
 use crate::game::{Player};
+use crate::systems::cursor::{get_abs_mouse_position};
 
 pub const PLAYER_SPEED_X: f32 = 100.0;
 pub const PLAYER_SPEED_Y: f32 = 100.0;
@@ -36,11 +38,14 @@ impl<'s> System<'s> for MovementSystem {
         WriteStorage<'s, Transform>,
         Read<'s, InputHandler<StringBindings>>,
         Read<'s, Time>,
+        ReadStorage<'s, Camera>,
         ReadExpect<'s, ScreenDimensions>,
     );
 
-    fn run(&mut self, (mut players, mut transforms, input, time, screen_dimensions): Self::SystemData) {
-         for (player, transform) in (&mut players, &mut transforms).join() {
+    fn run(&mut self, (mut players, mut transforms, input, time, cameras, screen_dimensions): Self::SystemData) {
+        let mut player_x: Option<f32> = None;
+        let mut player_y: Option<f32> = None;
+        for (player, transform) in (&mut players, &mut transforms).join() {
             let movement_x = input.axis_value("move_x");
             let movement_y = input.axis_value("move_y");
 
@@ -53,14 +58,25 @@ impl<'s> System<'s> for MovementSystem {
             } 
 
             if let Some((mouse_x, mouse_y)) = input.mouse_position() {
-                let mouse_y = screen_dimensions.height() - mouse_y;
-                let player_x = transform.translation().x;
-                let player_y = transform.translation().y;
+                player_x.replace(transform.translation().x);
+                player_y.replace(transform.translation().y);
+
                 
-                let angle = get_angle_to_face(player_x, player_y, mouse_x, mouse_y);
+                let (rel_mouse_x, rel_mouse_y) = get_abs_mouse_position(mouse_x, mouse_y, player_x.unwrap(), player_y.unwrap(), screen_dimensions.width(), screen_dimensions.height());
+                
+                let angle = get_angle_to_face(player_x.unwrap(), player_y.unwrap(), rel_mouse_x, rel_mouse_y);
 
                 transform.set_rotation_2d(angle);
             }
-         }
+            //println!("Player {:?} {}", transform.translation().x, transform.translation().y);
+        }
+        if player_x.is_some()  && player_y.is_some()  {
+            for (camera, transform) in (&cameras, &mut transforms).join() {
+                transform.set_translation_x(player_x.unwrap());
+                transform.set_translation_y(player_y.unwrap());
+                //println!("Camera {:?} {}", transform.translation().x, transform.translation().y);
+            }
+        }
+        
     }
 }
