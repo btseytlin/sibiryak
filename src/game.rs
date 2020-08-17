@@ -3,7 +3,7 @@ use amethyst::{
     ecs::prelude::*,
     assets::{AssetStorage, Loader, Handle},
     renderer::{Camera, Texture, SpriteRender, SpriteSheet, SpriteSheetFormat, ImageFormat},
-    core::{Named, transform::Transform, timing::Time, Parent},
+    core::{transform::Transform},
     window::ScreenDimensions,
 };
 
@@ -21,21 +21,28 @@ impl SimpleState for Game {
         world.register::<Cursor>();
 
         self.sprite_sheet_handle.replace(load_spritesheet("player_spritesheet", world));
-        let player = init_player(world, self.sprite_sheet_handle.clone().unwrap());
-
-
-        
+        init_player(world, self.sprite_sheet_handle.clone().unwrap());
 
         let background_handle = load_spritesheet("background", world);
         init_background_sprite(world, &background_handle);
 
-        init_camera(world, player);
+        init_camera(world);
 
         let cursor_handle = load_spritesheet("crosshair", world);
         init_cursor(world, cursor_handle);
 
         println!("{:?}", "game started");
     }
+}
+
+pub struct Animation {
+    pub frames: usize,
+    pub frame_duration: usize,
+    pub first_sprite_index: usize,
+}
+
+impl Component for Animation {
+    type Storage = DenseVecStorage<Self>;
 }
 
 pub struct Player;
@@ -49,6 +56,20 @@ impl Player {
 impl Component for Player {
     type Storage = DenseVecStorage<Self>;
 }
+
+pub enum Action {
+    Idle,
+    Walk,
+}
+
+pub struct ActionState { 
+    pub action: Action,
+}
+
+impl Component for ActionState {
+    type Storage = DenseVecStorage<Self>;
+}
+
 
 pub struct Cursor;
 
@@ -66,10 +87,23 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
         sprite_number: 0,
     };
 
+    let animation = Animation {
+        frames: 2,
+        frame_duration: 15,
+        first_sprite_index: 1, // the first frame for this example is the first sprite.
+    };
+
+    let action_state = ActionState {
+        action: Action::Idle,
+    };
+
     world.create_entity()
         .with(transform)
         .with(sprite_render)
+        .with(animation)
+        .with(action_state)
         .with(Player::new())
+        .named("player")
         .build()
 }
 
@@ -94,7 +128,7 @@ fn init_cursor(world: &mut World, cursor_handle: Handle<SpriteSheet>) -> Entity 
         .build()
 }
 
-fn init_camera(world: &mut World, parent: Entity) -> Entity {
+fn init_camera(world: &mut World) -> Entity {
     let (width, height) = {
         let dim = world.read_resource::<ScreenDimensions>();
         (dim.width(), dim.height())

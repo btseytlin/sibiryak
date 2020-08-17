@@ -1,7 +1,6 @@
 use amethyst::{
-    core::{Named, Transform, SystemDesc},
-    derive::SystemDesc,
-    ecs::prelude::{Join, Read, ReadExpect, ReadStorage, System, SystemData, World, WriteStorage},
+    core::{Named, Transform},
+    ecs::prelude::*,
     input::{InputHandler, StringBindings},
     window::ScreenDimensions,
 };
@@ -42,7 +41,7 @@ impl<'s> System<'s> for CursorSystem {
         }
 
         if let Some((mouse_x, mouse_y)) = input.mouse_position() {
-            for (cursor, transform) in (&mut cursors, &mut transforms).join() {
+            for (_cursor, transform) in (&mut cursors, &mut transforms).join() {
                 //println!("Mouse {:?} {}", mouse_x, mouse_y );
 
                 let (rel_mouse_x, rel_mouse_y) = get_abs_mouse_position(mouse_x, mouse_y, camera_x, camera_y, screen_dimensions.width(), screen_dimensions.height());

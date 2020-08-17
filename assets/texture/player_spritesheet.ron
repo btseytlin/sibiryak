@@ -8,5 +8,17 @@ List((
             width: 80,
             height: 55,
         ),
+        (
+            x: 29,
+            y: 154,
+            width: 82,
+            height: 103,
+        ),
+        (
+            x: 142,
+            y: 274,
+            width: 80,
+            height: 109,
+        ),
     ],
 ))
