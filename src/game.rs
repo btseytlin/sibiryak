@@ -7,6 +7,10 @@ use amethyst::{
     window::ScreenDimensions,
 };
 
+use crate::systems::{
+    movement::{Movable}
+};
+
 #[derive(Default)]
 pub struct Game {
     sprite_sheet_handle: Option<Handle<SpriteSheet>>,
@@ -82,6 +86,15 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
     let mut transform = Transform::default();
     transform.set_translation_xyz(250.0, 250.0, 0.0);
 
+    let movement = Movable {
+        speed_forward: 200.0,
+        speed_left: 200.0,
+        velocity_forward: 0.0,
+        velocity_left: 0.0,
+        rotation: 0.0,
+    };
+
+
     let sprite_render = SpriteRender {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 0,
@@ -101,6 +114,7 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
         .with(transform)
         .with(sprite_render)
         .with(animation)
+        .with(movement)
         .with(action_state)
         .with(Player::new())
         .named("player")

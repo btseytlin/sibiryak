@@ -5,13 +5,13 @@
 
 (
     axes: {
-        "move_x": Emulated(
-            pos: Key(D),
-            neg: Key(A),
-        ),
-        "move_y": Emulated(
+        "movement_forward": Emulated(
             pos: Key(W),
             neg: Key(S),
+        ),
+        "movement_left": Emulated(
+            pos: Key(D),
+            neg: Key(A),
         ),
     },
     actions: {},

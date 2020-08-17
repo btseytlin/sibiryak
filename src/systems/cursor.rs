@@ -48,6 +48,8 @@ impl<'s> System<'s> for CursorSystem {
 
                 transform.set_translation_x(rel_mouse_x);
                 transform.set_translation_y(rel_mouse_y);
+
+                println!("Cursor {:?} {}", rel_mouse_x, rel_mouse_y);
             }
         }
     }
