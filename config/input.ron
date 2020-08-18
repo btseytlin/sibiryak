@@ -9,7 +9,7 @@
             pos: Key(W),
             neg: Key(S),
         ),
-        "movement_left": Emulated(
+        "movement_sideways": Emulated(
             pos: Key(D),
             neg: Key(A),
         ),

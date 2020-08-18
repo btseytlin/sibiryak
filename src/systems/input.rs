@@ -42,13 +42,15 @@ impl<'s> System<'s> for InputSystem {
 
         for (player, movable, transform) in (&mut players, &mut movables, &transforms).join() {
             let movement_forward = input.axis_value("movement_forward").unwrap();
-            let movement_left = input.axis_value("movement_left").unwrap();
+            let movement_sideways = input.axis_value("movement_sideways").unwrap();
 
-            /*let movement_forward_adjusted = movement_x*movable.velocity_forward*time.delta_seconds();
-            let movement_left_adjusted = movement_y*movable.velocity_left*time.delta_seconds();*/
+            if movement_forward >= 0.0 {
+                movable.velocity_forward = movable.speed_forward * movement_forward;
+            } else {
+                movable.velocity_forward = movable.speed_backwards * movement_forward;
+            }
 
-            movable.velocity_forward = movement_forward;
-            movable.velocity_left = movement_left;
+            movable.velocity_sideways = movable.speed_sideways * movement_sideways;
 
             if let Some((mouse_x, mouse_y)) = input.mouse_position() {
                 let (player_x, player_y) = (transform.translation().x, transform.translation().y);

@@ -8,7 +8,8 @@ use amethyst::{
 };
 
 use crate::systems::{
-    movement::{Movable}
+    movement::{Movable},
+    animation::{Action, ActionState, Animation}
 };
 
 #[derive(Default)]
@@ -35,16 +36,6 @@ impl SimpleState for Game {
     }
 }
 
-pub struct Animation {
-    pub frames: usize,
-    pub frame_duration: usize,
-    pub first_sprite_index: usize,
-}
-
-impl Component for Animation {
-    type Storage = DenseVecStorage<Self>;
-}
-
 pub struct Player;
 
 impl Player {
@@ -56,20 +47,6 @@ impl Player {
 impl Component for Player {
     type Storage = DenseVecStorage<Self>;
 }
-
-pub enum Action {
-    Idle,
-    Walk,
-}
-
-pub struct ActionState { 
-    pub action: Action,
-}
-
-impl Component for ActionState {
-    type Storage = DenseVecStorage<Self>;
-}
-
 
 pub struct Cursor;
 
@@ -84,9 +61,10 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
 
     let movement = Movable {
         speed_forward: 200.0,
-        speed_left: 100.0,
+        speed_backwards: 100.0,
+        speed_sideways: 100.0,
         velocity_forward: 0.0,
-        velocity_left: 0.0,
+        velocity_sideways: 0.0,
         rotation: 0.0,
     };
 

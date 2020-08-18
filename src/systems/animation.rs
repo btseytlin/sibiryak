@@ -4,7 +4,29 @@ use amethyst::{
     renderer::SpriteRender,
 };
 
-use crate::game::{Animation, ActionState, Action};
+pub enum Action {
+    Idle,
+    Walk,
+}
+
+pub struct ActionState { 
+    pub action: Action,
+}
+
+impl Component for ActionState {
+    type Storage = DenseVecStorage<Self>;
+}
+
+
+pub struct Animation {
+    pub frames: usize,
+    pub frame_duration: usize,
+    pub first_sprite_index: usize,
+}
+
+impl Component for Animation {
+    type Storage = DenseVecStorage<Self>;
+}
 
 pub struct AnimationSystem;
 

@@ -5,7 +5,7 @@ pub use self::input::InputSystem;
 pub use self::camera::CameraSystem;
 
 pub mod movement;
-mod cursor;
-mod animation;
-mod input;
-mod camera;
+pub mod cursor;
+pub mod animation;
+pub mod input;
+pub mod camera;

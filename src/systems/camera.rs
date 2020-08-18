@@ -7,7 +7,6 @@ use crate::game::Player;
 
 pub struct CameraSystem;
 
-
 impl<'s> System<'s> for CameraSystem {
     type SystemData = (
         ReadStorage<'s, Player>,
