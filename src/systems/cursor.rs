@@ -1,13 +1,13 @@
 use amethyst::{
+    renderer::{Camera},
     core::{Named, Transform},
     ecs::prelude::*,
     input::{InputHandler, StringBindings},
     window::ScreenDimensions,
 };
+use crate::game::{Cursor};
 
 pub struct CursorSystem;
-
-use crate::game::{Cursor};
 
 pub fn get_abs_mouse_position(mouse_x: f32, 
                                    mouse_y: f32, 
@@ -21,35 +21,32 @@ pub fn get_abs_mouse_position(mouse_x: f32,
 
 impl<'s> System<'s> for CursorSystem {
     type SystemData = (
+        ReadStorage<'s, Camera>,
         WriteStorage<'s, Cursor>,
         WriteStorage<'s, Transform>,
         Read<'s, InputHandler<StringBindings>>,
         ReadExpect<'s, ScreenDimensions>,
-        ReadStorage<'s, Named>,
     );
 
-    fn run(&mut self, (mut cursors, mut transforms, input, screen_dimensions, named): Self::SystemData) {
-        let mut camera_x: f32 = 0.0;
-        let mut camera_y: f32 = 0.0;
+    fn run(&mut self, (cameras, mut cursors, mut transforms, input, screen_dimensions): Self::SystemData) {
+        let mut camera_pos: Option<(f32, f32)> = None;
 
-        for (name, transform) in (&named, &mut transforms).join() {
-            if name.name == "camera" {
-                camera_x = transform.translation().x;
-                camera_y = transform.translation().y;
-                break;
-            }
+        for (_camera, transform) in (&cameras, &mut transforms).join() {
+            camera_pos.replace((transform.translation().x, transform.translation().y));
+            break;
         }
 
+
         if let Some((mouse_x, mouse_y)) = input.mouse_position() {
-            for (_cursor, transform) in (&mut cursors, &mut transforms).join() {
-                //println!("Mouse {:?} {}", mouse_x, mouse_y );
+            if let Some((camera_x, camera_y)) = camera_pos {
+                for (_cursor, transform) in (&mut cursors, &mut transforms).join() {
+                    //println!("Mouse {:?} {}", mouse_x, mouse_y );
 
-                let (rel_mouse_x, rel_mouse_y) = get_abs_mouse_position(mouse_x, mouse_y, camera_x, camera_y, screen_dimensions.width(), screen_dimensions.height());
+                    let (abs_mouse_x, abs_mouse_y) = get_abs_mouse_position(mouse_x, mouse_y, camera_x, camera_y, screen_dimensions.width(), screen_dimensions.height());
 
-                transform.set_translation_x(rel_mouse_x);
-                transform.set_translation_y(rel_mouse_y);
-
-                println!("Cursor {:?} {}", rel_mouse_x, rel_mouse_y);
+                    transform.set_translation_x(abs_mouse_x);
+                    transform.set_translation_y(abs_mouse_y);
+                }
             }
         }
     }

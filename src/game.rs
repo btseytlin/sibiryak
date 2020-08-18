@@ -20,10 +20,6 @@ impl SimpleState for Game {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {        
         let world = data.world;
 
-        // TODO remove
-        world.register::<Player>();
-        world.register::<Cursor>();
-
         self.sprite_sheet_handle.replace(load_spritesheet("player_spritesheet", world));
         init_player(world, self.sprite_sheet_handle.clone().unwrap());
 
@@ -88,7 +84,7 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
 
     let movement = Movable {
         speed_forward: 200.0,
-        speed_left: 200.0,
+        speed_left: 100.0,
         velocity_forward: 0.0,
         velocity_left: 0.0,
         rotation: 0.0,

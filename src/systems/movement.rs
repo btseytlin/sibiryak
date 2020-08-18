@@ -10,6 +10,8 @@ use std::f32::consts::PI;
 use crate::game::{Player, ActionState, Action};
 use crate::systems::cursor::{get_abs_mouse_position};
 
+use amethyst::core::math::{Unit, Vector3};
+
 pub struct Movable {
     pub speed_forward: f32,
     pub speed_left: f32,
@@ -46,78 +48,24 @@ impl<'s> System<'s> for MovementSystem {
         WriteStorage<'s, ActionState>,
         WriteStorage<'s, Transform>,
         Read<'s, InputHandler<StringBindings>>,
-        Read<'s, Time>,
-        ReadStorage<'s, Camera>,
-        ReadExpect<'s, ScreenDimensions>,
+        Read<'s, Time>
     );
 
-    fn run(&mut self, (mut players, mut movables, mut action_state, mut transforms, input, time, cameras, screen_dimensions): Self::SystemData) {
-        let mut player_x: Option<f32> = None;
-        let mut player_y: Option<f32> = None;
-
+    fn run(&mut self, (mut players, mut movables, mut action_state, mut transforms, input, time): Self::SystemData) {
         for (movable, transform) in (&mut movables, &mut transforms).join() {
             let x = transform.translation().x;
             let y = transform.translation().y;
             let angle = movable.rotation;
-
-            let local_angle = get_local_angle(angle);
+            transform.set_rotation_2d(angle);
 
             let distance_forward = movable.velocity_forward * movable.speed_forward * time.delta_seconds();
 
-            let mut dx = distance_forward * local_angle.sin();
-            let mut dy = distance_forward * local_angle.cos();
+            transform.append_translation_along(Unit::new_normalize(Vector3::new(0.0, 1.0, 0.0)), distance_forward);
 
-            if angle >= PI/2.0 && angle <= 1.5 * PI {
-                dy = -dy;
-            }
+            let distance_left = movable.velocity_left * movable.speed_left * time.delta_seconds();
 
-            if angle <= PI {
-                dx = -dx;
-            }
+            transform.append_translation_along(Unit::new_normalize(Vector3::new(1.0, 0.0, 0.0)), distance_left);
 
-
-            println!("x: {}, y: {}, angle: {}, local_angle: {}", x, y, angle, local_angle);
-
-            println!("velocity forward: {}", movable.velocity_forward);
-
-            println!("distance forward: {}", distance_forward);
-
-            println!("dx: {}, dy: {}", dx, dy);
-
-
-            if dx != 0.0 {
-                transform.prepend_translation_x(dx);
-            }
-
-            if dy != 0.0 {
-                transform.prepend_translation_y(dy);
-            }
-
-            transform.set_rotation_2d(angle);
-
-            //movable.velocity_forward = 0.0;
-            //movable.velocity_left = 0.0;
         }
-
-        for (player, movable, action_state, transform) in (&mut players, &mut movables, &mut action_state, &mut transforms).join() {
-            player_x.replace(transform.translation().x);
-            player_y.replace(transform.translation().y);
-
-            // if movement_x_adjusted.abs() > 0.0 || movement_y_adjusted.abs() > 0.0 {
-            //     action_state.action = Action::Walk;
-            // } else {
-            //     action_state.action = Action::Idle;
-            // }
-        }
-
-        // Todo separate in own system
-
-        if player_x.is_some()  && player_y.is_some()  {
-            for (_camera, transform) in (&cameras, &mut transforms).join() {
-                transform.set_translation_x(player_x.unwrap());
-                transform.set_translation_y(player_y.unwrap());
-            }
-        }
-        
     }
 }
