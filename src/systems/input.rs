@@ -1,9 +1,8 @@
 use amethyst::{
-    core::{Transform, timing::Time},
+    core::{Transform},
     ecs::prelude::*,
     input::{InputHandler, StringBindings},
     window::ScreenDimensions,
-    renderer::{Camera}
 };
 use std::f32::consts::PI;
 use crate::game::Player;
@@ -31,16 +30,15 @@ fn get_angle_to_face(x1: f32, y1: f32, x2: f32, y2: f32) -> f32 {
 
 impl<'s> System<'s> for InputSystem {
     type SystemData = (
-        WriteStorage<'s, Player>,
+        ReadStorage<'s, Player>,
         WriteStorage<'s, Movable>,
         ReadStorage<'s, Transform>,
         Read<'s, InputHandler<StringBindings>>,
         ReadExpect<'s, ScreenDimensions>,
     );
 
-    fn run(&mut self, (mut players, mut movables, transforms, input, screen_dimensions): Self::SystemData) {
-
-        for (player, movable, transform) in (&mut players, &mut movables, &transforms).join() {
+    fn run(&mut self, (players, mut movables, transforms, input, screen_dimensions): Self::SystemData) {
+        for (_player, movable, transform) in (&players, &mut movables, &transforms).join() {
             let movement_forward = input.axis_value("movement_forward").unwrap();
             let movement_sideways = input.axis_value("movement_sideways").unwrap();
 

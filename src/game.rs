@@ -12,6 +12,8 @@ use crate::systems::{
     animation::{Action, ActionState, Animation}
 };
 
+use amethyst::core::math::{Vector3};
+
 #[derive(Default)]
 pub struct Game {
     sprite_sheet_handle: Option<Handle<SpriteSheet>>,
@@ -61,7 +63,7 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
 
     let movement = Movable {
         speed_forward: 200.0,
-        speed_backwards: 100.0,
+        speed_backwards: 80.0,
         speed_sideways: 100.0,
         velocity_forward: 0.0,
         velocity_sideways: 0.0,
@@ -103,6 +105,7 @@ fn init_cursor(world: &mut World, cursor_handle: Handle<SpriteSheet>) -> Entity 
 
     let mut transform = Transform::default();
     transform.set_translation_xyz(width / 2.0, height / 2.0, 0.0);
+    transform.set_scale(Vector3::new(0.5, 0.5, 0.5));
 
     let sprite_render = SpriteRender {
         sprite_sheet: cursor_handle,

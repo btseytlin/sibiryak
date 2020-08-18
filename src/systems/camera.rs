@@ -18,7 +18,7 @@ impl<'s> System<'s> for CameraSystem {
         let mut player_x: Option<f32> = None;
         let mut player_y: Option<f32> = None;
 
-        for (player, transform) in (&players, &mut transforms).join() {
+        for (_player, transform) in (&players, &mut transforms).join() {
             player_x.replace(transform.translation().x);
             player_y.replace(transform.translation().y);
             break;

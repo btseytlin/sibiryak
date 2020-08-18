@@ -1,6 +1,6 @@
 use amethyst::{
     renderer::{Camera},
-    core::{Named, Transform},
+    core::{Transform},
     ecs::prelude::*,
     input::{InputHandler, StringBindings},
     window::ScreenDimensions,
