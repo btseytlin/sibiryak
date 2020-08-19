@@ -4,27 +4,29 @@ use amethyst::{
     renderer::SpriteRender,
 };
 
-pub enum Action {
-    Idle,
-    Walk,
+pub enum AnimationId {
+    PlayerIdle,
+    PlayerWalk,
 }
-
-pub struct ActionState { 
-    pub action: Action,
-}
-
-impl Component for ActionState {
-    type Storage = DenseVecStorage<Self>;
-}
-
 
 pub struct Animation {
+    pub animation_id: AnimationId,
     pub frames: usize,
     pub frame_duration: usize,
     pub first_sprite_index: usize,
 }
 
-impl Component for Animation {
+impl Animation {
+    fn set_frame(&self, sprite_render: &mut SpriteRender, frame: usize) {
+        sprite_render.sprite_number = self.first_sprite_index + frame as usize;
+    } 
+}
+
+pub struct AnimationState { 
+    pub animation: Animation,
+}
+
+impl Component for AnimationState {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -32,25 +34,17 @@ pub struct AnimationSystem;
 
 impl<'s> System<'s> for AnimationSystem {
   type SystemData = (
-    ReadStorage<'s, Animation>,
-    ReadStorage<'s, ActionState>,
+    WriteStorage<'s, AnimationState>,
     WriteStorage<'s, SpriteRender>,
     Read<'s, Time>,
   );
 
-  fn run(&mut self, (animations, action_states, mut sprite_renders, time): Self::SystemData) {
-    for (animation, action_state, sprite) in (&animations, &action_states, &mut sprite_renders).join() {
+  fn run(&mut self, (mut animation_states, mut sprite_renders, time): Self::SystemData) {
+    for (animation_state, sprite_render) in (&mut animation_states, &mut sprite_renders).join() {
       let elapsed_time = time.frame_number();
-      let frame = (elapsed_time / animation.frame_duration as u64) as usize % animation.frames;
+      let frame = (elapsed_time / animation_state.animation.frame_duration as u64) as usize % animation_state.animation.frames;
 
-      match action_state.action {
-        Action::Idle => {
-            sprite.sprite_number = 0;
-        },
-        Action::Walk => {
-            sprite.sprite_number = animation.first_sprite_index + frame as usize;
-        },
-      }
+      animation_state.animation.set_frame(sprite_render, frame);
     }
   }
 }

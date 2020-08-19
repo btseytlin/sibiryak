@@ -9,6 +9,10 @@ use crate::game::Player;
 use crate::systems::movement::{Movable};
 use crate::systems::cursor::{get_abs_mouse_position};
 
+use crate::systems::{
+    animation::{AnimationState, AnimationId}
+};
+
 
 pub struct InputSystem;
 
@@ -31,14 +35,15 @@ fn get_angle_to_face(x1: f32, y1: f32, x2: f32, y2: f32) -> f32 {
 impl<'s> System<'s> for InputSystem {
     type SystemData = (
         ReadStorage<'s, Player>,
+        WriteStorage<'s, AnimationState>,
         WriteStorage<'s, Movable>,
         ReadStorage<'s, Transform>,
         Read<'s, InputHandler<StringBindings>>,
         ReadExpect<'s, ScreenDimensions>,
     );
 
-    fn run(&mut self, (players, mut movables, transforms, input, screen_dimensions): Self::SystemData) {
-        for (_player, movable, transform) in (&players, &mut movables, &transforms).join() {
+    fn run(&mut self, (players, mut animation_states, mut movables, transforms, input, screen_dimensions): Self::SystemData) {
+        for (_player, animation_state, movable, transform) in (&players, &mut animation_states, &mut movables, &transforms).join() {
             let movement_forward = input.axis_value("movement_forward").unwrap();
             let movement_sideways = input.axis_value("movement_sideways").unwrap();
 
@@ -46,6 +51,12 @@ impl<'s> System<'s> for InputSystem {
                 movable.velocity_forward = movable.speed_forward * movement_forward;
             } else {
                 movable.velocity_forward = movable.speed_backwards * movement_forward;
+            }
+
+            if movable.velocity_forward > 0.0 {
+                animation_state.animation = Player::get_animation(AnimationId::PlayerWalk);
+            } else {
+                animation_state.animation = Player::get_animation(AnimationId::PlayerIdle);
             }
 
             movable.velocity_sideways = movable.speed_sideways * movement_sideways;

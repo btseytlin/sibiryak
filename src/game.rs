@@ -9,7 +9,7 @@ use amethyst::{
 
 use crate::systems::{
     movement::{Movable},
-    animation::{Action, ActionState, Animation}
+    animation::{AnimationId, Animation, AnimationState}
 };
 
 use amethyst::core::math::{Vector3};
@@ -44,6 +44,27 @@ impl Player {
     fn new() -> Player {
         Player {}
     }
+
+    pub fn get_animation(animation_id: AnimationId) -> Animation {
+        match animation_id {
+            AnimationId::PlayerIdle => {
+                Animation {
+                    animation_id: AnimationId::PlayerIdle,
+                    frames: 1,
+                    frame_duration: 999,
+                    first_sprite_index: 0,
+                }
+            },
+            AnimationId::PlayerWalk => {
+                Animation {
+                    animation_id: AnimationId::PlayerWalk,
+                    frames: 2,
+                    frame_duration: 20,
+                    first_sprite_index: 1,
+                }
+            }
+        }
+    }
 }
 
 impl Component for Player {
@@ -70,29 +91,23 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
         rotation: 0.0,
     };
 
-
     let sprite_render = SpriteRender {
         sprite_sheet: sprite_sheet_handle,
         sprite_number: 0,
     };
 
-    let animation = Animation {
-        frames: 2,
-        frame_duration: 15,
-        first_sprite_index: 1, // the first frame for this example is the first sprite.
-    };
+    let player = Player::new();
 
-    let action_state = ActionState {
-        action: Action::Idle,
+    let animation_state = AnimationState {
+        animation: Player::get_animation(AnimationId::PlayerIdle),
     };
 
     world.create_entity()
         .with(transform)
         .with(sprite_render)
-        .with(animation)
         .with(movement)
-        .with(action_state)
-        .with(Player::new())
+        .with(animation_state)
+        .with(player)
         .named("player")
         .build()
 }
