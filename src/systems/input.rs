@@ -1,5 +1,5 @@
 use amethyst::{
-    core::{Transform},
+    core::{Transform, timing::Time},
     ecs::prelude::*,
     input::{InputHandler, StringBindings},
     window::ScreenDimensions,
@@ -54,9 +54,9 @@ impl<'s> System<'s> for InputSystem {
             }
 
             if movable.velocity_forward > 0.0 {
-                animation_state.animation = Player::get_animation(AnimationId::PlayerWalk);
+                animation_state.set_animation_id(AnimationId::PlayerWalk);
             } else {
-                animation_state.animation = Player::get_animation(AnimationId::PlayerIdle);
+                animation_state.set_animation_id(AnimationId::PlayerIdle);
             }
 
             movable.velocity_sideways = movable.speed_sideways * movement_sideways;

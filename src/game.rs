@@ -3,13 +3,13 @@ use amethyst::{
     ecs::prelude::*,
     assets::{AssetStorage, Loader, Handle},
     renderer::{Camera, Texture, SpriteRender, SpriteSheet, SpriteSheetFormat, ImageFormat},
-    core::{transform::Transform},
+    core::{transform::Transform, timing::Time},
     window::ScreenDimensions,
 };
 
 use crate::systems::{
     movement::{Movable},
-    animation::{AnimationId, Animation, AnimationState}
+    animation::{AnimationId, Animation, AnimationState, AnimationsResource}
 };
 
 use amethyst::core::math::{Vector3};
@@ -23,8 +23,15 @@ impl SimpleState for Game {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {        
         let world = data.world;
 
+        let time = *(world.try_fetch::<Time>().unwrap());
+        let animations_resource = AnimationsResource::new();
+        world.insert(animations_resource);
+
         self.sprite_sheet_handle.replace(load_spritesheet("player_spritesheet", world));
-        init_player(world, self.sprite_sheet_handle.clone().unwrap());
+        init_player(world, self.sprite_sheet_handle.clone().unwrap(), time);
+
+        let wall_handle = load_spritesheet("wall", world);
+        init_wall(world, &wall_handle);
 
         let background_handle = load_spritesheet("background", world);
         init_background_sprite(world, &background_handle);
@@ -44,27 +51,6 @@ impl Player {
     fn new() -> Player {
         Player {}
     }
-
-    pub fn get_animation(animation_id: AnimationId) -> Animation {
-        match animation_id {
-            AnimationId::PlayerIdle => {
-                Animation {
-                    animation_id: AnimationId::PlayerIdle,
-                    frames: 1,
-                    frame_duration: 999,
-                    first_sprite_index: 0,
-                }
-            },
-            AnimationId::PlayerWalk => {
-                Animation {
-                    animation_id: AnimationId::PlayerWalk,
-                    frames: 2,
-                    frame_duration: 20,
-                    first_sprite_index: 1,
-                }
-            }
-        }
-    }
 }
 
 impl Component for Player {
@@ -78,7 +64,10 @@ impl Component for Cursor {
 }
 
 
-fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> Entity {
+fn init_player(world: &mut World, 
+    sprite_sheet_handle: Handle<SpriteSheet>,
+    time: Time,
+    ) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(250.0, 250.0, 0.0);
 
@@ -98,9 +87,7 @@ fn init_player(world: &mut World, sprite_sheet_handle: Handle<SpriteSheet>) -> E
 
     let player = Player::new();
 
-    let animation_state = AnimationState {
-        animation: Player::get_animation(AnimationId::PlayerIdle),
-    };
+    let animation_state = AnimationState::new(AnimationId::PlayerIdle, AnimationsResource::get(AnimationId::PlayerIdle), time.absolute_time_seconds());
 
     world.create_entity()
         .with(transform)
@@ -150,6 +137,22 @@ fn init_camera(world: &mut World) -> Entity {
         .named("camera")
         .build()
 }
+
+fn init_wall(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
+    let mut transform = Transform::default();
+    transform.set_translation_z(0.0);
+    let sprite = SpriteRender {
+        sprite_sheet: sprite_sheet.clone(),
+        sprite_number: 0,
+    };
+    world
+        .create_entity()
+        .with(transform)
+        .with(sprite)
+        .named("wall")
+        .build()
+}
+
 
 fn init_background_sprite(world: &mut World, sprite_sheet: &Handle<SpriteSheet>) -> Entity {
     let mut transform = Transform::default();
