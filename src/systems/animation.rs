@@ -5,7 +5,7 @@ use amethyst::{
 };
 use std::collections::HashMap;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq, Hash)]
 pub enum AnimationId {
     PlayerIdle,
     PlayerWalk,
@@ -16,35 +16,41 @@ pub struct Animation {
 }
 
 #[derive(Default)]
-pub struct AnimationsResource;
+pub struct AnimationsResource {
+    animations: HashMap<AnimationId, Animation>
+}
 
 impl AnimationsResource {
     pub fn new() -> AnimationsResource {
-        AnimationsResource {}
+        let map: HashMap<AnimationId, Animation> = HashMap::new();
+        map.insert(AnimationId::PlayerIdle, Animation {
+                    frames: vec![(0, 999.0)]
+                });
+
+        map.insert(AnimationId::PlayerWalk, Animation {
+                    frames: vec![(1, 1.0), (2, 1.0)]
+                });
+
+        AnimationsResource {
+            animations: map
+        }
     }
 
-    pub fn get(animation_id: AnimationId) -> Animation {
-        match animation_id {
-            AnimationId::PlayerIdle => Animation {
-                    frames: vec![(0, 999.0)]
-                },
-            AnimationId::PlayerWalk =>  Animation {
-                    frames: vec![(1, 1.0), (2, 1.0)]
-                },
-        }
+    pub fn get<'a>(&'a self, animation_id: &'static AnimationId) -> &'a Animation {
+        &(self.animations.get(&animation_id).expect("Unable to retrieve animation!"))
     }
 }
 
-pub struct AnimationState { 
-    pub animation_id: AnimationId, 
-    animation: Animation,
+pub struct AnimationState<'a> { 
+    pub animation_id: &'static AnimationId, 
+    animation: &'a Animation,
     current_frame_index: usize,
     time_started: f64,
     request_change_animation: bool,
 }
 
-impl AnimationState {
-    pub fn new(animation_id: AnimationId, animation: Animation, current_time: f64) -> AnimationState {
+impl AnimationState<'_> {
+    pub fn new<'a>(animation_id: &'static AnimationId, animation: &'a Animation, current_time: f64) -> AnimationState<'a> {
         AnimationState {
             animation_id: animation_id,
             animation: animation,
@@ -75,26 +81,26 @@ impl AnimationState {
         }
     }
 
-    pub fn set_animation(&mut self, animation: Animation, current_time: f64) {
+    pub fn set_animation(&mut self, animation: &Animation, current_time: f64) {
         self.animation = animation;
         self.time_started = current_time;
         self.current_frame_index = self.animation.frames[0].0;
     }
 
-    pub fn set_animation_id(&mut self, animation_id: AnimationId) {
+    pub fn set_animation_id(&mut self, animation_id: &AnimationId) {
         if self.animation_id != animation_id {
             self.request_change_animation = true;
             self.animation_id = animation_id;
         }
     }
 
-    pub fn change_animation(&mut self, animation: Animation, current_time: f64) {
+    pub fn change_animation(&mut self, animation: &Animation, current_time: f64) {
         self.request_change_animation = false;
         self.set_animation(animation, current_time);
     }
 }
 
-impl Component for AnimationState {
+impl Component for AnimationState<'_> {
     type Storage = DenseVecStorage<Self>;
 }
 
@@ -102,16 +108,17 @@ pub struct AnimationSystem;
 
 impl<'s> System<'s> for AnimationSystem {
   type SystemData = (
-    WriteStorage<'s, AnimationState>,
+    WriteStorage<'s, AnimationState<'s>>,
     WriteStorage<'s, SpriteRender>,
     Read<'s, Time>,
+    Read<'s, AnimationsResource>,
   );
 
-  fn run(&mut self, (mut animation_states, mut sprite_renders, time): Self::SystemData) {
+  fn run(&mut self, (mut animation_states, mut sprite_renders, time, animations): Self::SystemData) {
     for (animation_state, sprite_render) in (&mut animation_states, &mut sprite_renders).join() {
         let current_time = time.absolute_time_seconds();
         if animation_state.request_change_animation {
-            let animation = AnimationsResource::get(animation_state.animation_id);
+            let animation = animations.get(animation_state.animation_id);
             animation_state.change_animation(animation, current_time)
         }
         animation_state.update_current_frame(current_time);
