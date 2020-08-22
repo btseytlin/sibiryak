@@ -35,7 +35,7 @@ fn get_angle_to_face(x1: f32, y1: f32, x2: f32, y2: f32) -> f32 {
 impl<'s> System<'s> for InputSystem {
     type SystemData = (
         ReadStorage<'s, Player>,
-        WriteStorage<'s, AnimationState<'s>>,
+        WriteStorage<'s, AnimationState>,
         WriteStorage<'s, Movable>,
         ReadStorage<'s, Transform>,
         Read<'s, InputHandler<StringBindings>>,
@@ -54,9 +54,9 @@ impl<'s> System<'s> for InputSystem {
             }
 
             if movable.velocity_forward > 0.0 {
-                animation_state.set_animation_id(&AnimationId::PlayerWalk);
+                animation_state.set_animation_id(AnimationId::PlayerWalk);
             } else {
-                animation_state.set_animation_id(&AnimationId::PlayerIdle);
+                animation_state.set_animation_id(AnimationId::PlayerIdle);
             }
 
             movable.velocity_sideways = movable.speed_sideways * movement_sideways;
