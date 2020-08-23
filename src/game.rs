@@ -25,10 +25,11 @@ impl SimpleState for Game {
 
         let time = *(world.try_fetch::<Time>().unwrap());
         let animations_resource = AnimationsResource::new();
-        world.insert(animations_resource);
 
         self.sprite_sheet_handle.replace(load_spritesheet("player_spritesheet", world));
-        init_player(world, self.sprite_sheet_handle.clone().unwrap(), time, animations_resource);
+        init_player(world, self.sprite_sheet_handle.clone().unwrap(), time, &animations_resource);
+        world.insert(animations_resource);
+
 
         let wall_handle = load_spritesheet("wall", world);
         init_wall(world, &wall_handle);
@@ -67,7 +68,7 @@ impl Component for Cursor {
 fn init_player(world: &mut World, 
     sprite_sheet_handle: Handle<SpriteSheet>,
     time: Time,
-    animations: AnimationsResource,
+    animations: &AnimationsResource,
     ) -> Entity {
     let mut transform = Transform::default();
     transform.set_translation_xyz(250.0, 250.0, 0.0);
@@ -88,7 +89,7 @@ fn init_player(world: &mut World,
 
     let player = Player::new();
 
-    let animation_state = AnimationState::new(&AnimationId::PlayerIdle, &animations.get(&AnimationId::PlayerIdle), time.absolute_time_seconds());
+    let animation_state = AnimationState::new(AnimationId::PlayerIdle, animations.get(AnimationId::PlayerIdle), time.absolute_time_seconds());
 
     world.create_entity()
         .with(transform)
