@@ -59,17 +59,12 @@ impl AnimationState {
     }
 
     pub fn total_duration(&self, animation: &Animation) -> f64 {
-        let mut durations_sum: f64 = 0.0;
-        for (i, (sprite_num, sprite_duration)) in animation.frames.iter().enumerate() {
-            durations_sum += sprite_duration;
-        }
-        durations_sum
+        animation.frames.iter().map(|(sprite_num, sprite_duration)| sprite_duration).sum()
     }
 
     pub fn update_current_frame(&mut self, animation: &Animation, current_time: f64) {
         let time_since_started = (current_time - self.time_started) % self.total_duration(animation);
-        // println!("Total duration {:?}", self.total_duration(animation));
-        // println!("Time since started {:?}", time_since_started);
+
         let mut durations_sum: f64 = 0.0;
         for (i, (sprite_num, sprite_duration)) in animation.frames.iter().enumerate() {
             durations_sum += sprite_duration;
